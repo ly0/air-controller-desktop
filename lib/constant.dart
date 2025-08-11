@@ -43,17 +43,7 @@ class Constant {
 
   static const String DEFAULT_LANGUAGE_CODE = "en";
 
-  static const String URL_UPDATE_CHECK =
-      "https://api.github.com/repos/air-controller/air-controller-desktop/releases/latest";
-
-  static const String CURRENT_VERSION_NAME = "0.3.1";
-
-  static const String URL_VERSION_LIST =
-      "https://github.com/air-controller/air-controller-desktop/releases";
-
-  // The sharedPreferences key for the update download directory.
-  static const String KEY_UPDATE_DOWNLOAD_DIR =
-      "aircontroller_update_download_directory";
+  static const String CURRENT_VERSION_NAME = "0.5.0";
 
   static const bool ENABLE_HEARTBEAT_LOG = false;
 
@@ -214,18 +204,15 @@ class ToolboxPageRoute {
   static const String MANAGE_CONTACTS = "/toolbox/contacts";
 }
 
-const urlGitHub = "https://github.com/air-controller/air-controller-desktop";
+const urlGitHub = "https://github.com/ly0/air-controller-desktop";
 const urlDocs =
-    "https://github.com/air-controller/air-controller-desktop/blob/master/README.md";
+    "https://github.com/ly0/air-controller-desktop/blob/master/README.md";
 const urlIssuesGitHub =
-    "https://github.com/air-controller/air-controller-desktop/issues";
+    "https://github.com/ly0/air-controller-desktop/issues";
 const urlFeedback = "https://support.qq.com/product/468169";
 const urlWeibo = "https://weibo.com/u/6140262139";
 const urlWechatOfficial = "https://youngfeng.com/assets/images/mpwexin.jpg";
 const urlQQGroup = "https://jq.qq.com/?_wv=1027&k=eHQ3Sv2J";
-const urlUpdateDomain = "https://docs.ac.yhdm360.cn";
-const urlAppcastInland = "https://docs.ac.yhdm360.cn/update/appcast.xml";
-const urlAppCastOverseas = "https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/update/appcast.xml";
 
 const routeEnter = "/enter";
 const routeIndex = "/index";

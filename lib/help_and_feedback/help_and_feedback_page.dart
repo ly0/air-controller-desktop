@@ -24,7 +24,6 @@ class HelpAndFeedbackPage extends StatefulWidget {
 class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
   String? _mdContent;
   String? _currentVersion;
-  bool _isCheckUpdateHover = false;
 
   @override
   void initState() {
@@ -101,30 +100,6 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
                       color: Color(0xff333333),
                       fontSize: 14,
                       fontWeight: FontWeight.bold),
-                ),
-                Container(
-                  child: InkWell(
-                    child: Text(
-                      context.l10n.checkUpdate,
-                      style: TextStyle(
-                          decoration: _isCheckUpdateHover
-                              ? TextDecoration.underline
-                              : TextDecoration.none,
-                          color: Color(0xff2a6ad3),
-                          fontSize: 14),
-                    ),
-                    onHover: (isHover) {
-                      setState(() {
-                        _isCheckUpdateHover = isHover;
-                      });
-                    },
-                    onTap: () {
-                      context.read<HomeBloc>().add(HomeCheckUpdateRequested(
-                          isAutoCheck: false,
-                          isInland: CommonUtil.isInland(context)));
-                    },
-                  ),
-                  margin: EdgeInsets.only(left: 10),
                 )
               ],
             ),

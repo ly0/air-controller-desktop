@@ -1,9 +1,6 @@
 PODS:
   - audioplayers_darwin (0.0.1):
     - FlutterMacOS
-  - auto_updater (0.0.1):
-    - FlutterMacOS
-    - Sparkle
   - connectivity_plus_macos (0.0.1):
     - FlutterMacOS
     - ReachabilitySwift
@@ -25,7 +22,6 @@ PODS:
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - Sparkle (2.2.2)
   - sqflite_darwin (0.0.4):
     - Flutter
     - FlutterMacOS
@@ -36,7 +32,6 @@ PODS:
 
 DEPENDENCIES:
   - audioplayers_darwin (from `Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/macos`)
-  - auto_updater (from `Flutter/ephemeral/.symlinks/plugins/auto_updater/macos`)
   - connectivity_plus_macos (from `Flutter/ephemeral/.symlinks/plugins/connectivity_plus_macos/macos`)
   - desktop_drop (from `Flutter/ephemeral/.symlinks/plugins/desktop_drop/macos`)
   - device_info_plus (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos`)
@@ -53,13 +48,10 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - ReachabilitySwift
-    - Sparkle
 
 EXTERNAL SOURCES:
   audioplayers_darwin:
     :path: Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/macos
-  auto_updater:
-    :path: Flutter/ephemeral/.symlinks/plugins/auto_updater/macos
   connectivity_plus_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/connectivity_plus_macos/macos
   desktop_drop:
@@ -87,7 +79,6 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   audioplayers_darwin: 761f2948df701d05b5db603220c384fb55720012
-  auto_updater: 76f339029f646dfb03150e8a0253e67bef4cc38a
   connectivity_plus_macos: f85ab6f09fb370822fe361668d817369ec1ffbd5
   desktop_drop: e0b672a7d84c0a6cbc378595e82cdb15f2970a43
   device_info_plus: a56e6e74dbbd2bb92f2da12c64ddd4f67a749041
@@ -98,7 +89,6 @@ SPEC CHECKSUMS:
   ReachabilitySwift: 985039c6f7b23a1da463388634119492ff86c825
   screen_retriever: 4f97c103641aab8ce183fa5af3b87029df167936
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
-  Sparkle: cb8c851f6247a9acbe9e236539404c5be529f74d
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
   url_launcher_macos: 0fba8ddabfc33ce0a9afe7c5fef5aab3d8d2d673
   window_manager: 1d01fa7ac65a6e6f83b965471b1a7fdd3f06166c

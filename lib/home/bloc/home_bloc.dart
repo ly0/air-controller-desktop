@@ -1,16 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:air_controller/bootstrap.dart';
-import 'package:air_controller/constant.dart';
-import 'package:auto_updater/auto_updater.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/mobile_info.dart';
 import '../../repository/common_repository.dart';
-import '../../util/update_checker.dart';
 
 part 'home_event.dart';
 part 'home_state.dart';
@@ -27,50 +22,16 @@ class HomeLinearProgressIndicatorStatus extends Equatable {
   List<Object?> get props => [visible, current, total];
 }
 
-enum UpdateDownloadStatus {
-  initial,
-  start,
-  downloading,
-  success,
-  failure,
-  stop
-}
-
-class UpdateDownloadStatusUnit extends Equatable {
-  final UpdateDownloadStatus status;
-  final String? name;
-  final String? path;
-  final int totalSize;
-  final int currentSize;
-  final String? failureReason;
-
-  const UpdateDownloadStatusUnit(
-      {this.status = UpdateDownloadStatus.initial,
-      this.name,
-      this.path,
-      this.totalSize = 0,
-      this.currentSize = 0,
-      this.failureReason});
-
-  @override
-  List<Object?> get props =>
-      [status, name, path, totalSize, currentSize, failureReason];
-}
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final CommonRepository _commonRepository;
-  final UpdateChecker _updateChecker = UpdateChecker.create();
   final StreamController<HomeLinearProgressIndicatorStatus>
       _progressIndicatorStreamController = StreamController();
-  final StreamController<UpdateDownloadStatusUnit>
-      _updateDownloadStatusController = StreamController();
   final StreamController<MobileInfo> _updateMobileInfoStreamController =
       StreamController();
 
   Stream<HomeLinearProgressIndicatorStatus> get progressIndicatorStream =>
       _progressIndicatorStreamController.stream;
-  Stream<UpdateDownloadStatusUnit> get updateDownloadStatusStream =>
-      _updateDownloadStatusController.stream;
   Stream<MobileInfo> get updateMobileInfoStream =>
       _updateMobileInfoStreamController.stream;
 
@@ -79,11 +40,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         super(HomeState(tab: HomeTab.image)) {
     on<HomeTabChanged>(_onHomeTabChanged);
     on<HomeSubscriptionRequested>(_onSubscriptionRequested);
-    on<HomeCheckUpdateRequested>(_onCheckUpdateRequested);
-    on<HomeNewVersionAvailable>(_onNewVersionAvailable);
     on<HomeProgressIndicatorStatusChanged>(_onProgressIndicatorStatusChanged);
-    on<HomeUpdateDownloadStatusChanged>(_onUpdateDownloadStatusChanged);
-    on<HomeCheckUpdateStatusChanged>(_onUpdateCheckStatusChanged);
     on<HomeUpdateMobileInfo>(_onUpdateMobileInfo);
   }
 
@@ -102,86 +59,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     }
   }
 
-  void _onCheckUpdateRequested(
-      HomeCheckUpdateRequested event, Emitter<HomeState> emit) async {
-    if (kIsWeb) return;
-
-    if (Platform.isLinux) {
-      add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
-          status: UpdateCheckStatus.start, isAutoCheck: event.isAutoCheck)));
-
-      _updateChecker.onCheckFailure((error) {
-        if (isClosed) return;
-
-        add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
-            status: UpdateCheckStatus.failure,
-            isAutoCheck: event.isAutoCheck,
-            failureReason: "${error.toString()}")));
-      });
-
-      _updateChecker.onNoUpdateAvailable(() {
-        if (isClosed) return;
-
-        add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
-            status: UpdateCheckStatus.success,
-            isAutoCheck: event.isAutoCheck,
-            hasUpdateAvailable: false)));
-      });
-
-      _updateChecker
-          .onUpdateAvailable((publishTime, version, assets, updateInfo) {
-        if (isClosed) return;
-
-        add(HomeNewVersionAvailable(
-            publishTime, version, assets, updateInfo, event.isAutoCheck));
-      });
-
-      _updateChecker.check();
-    } else {
-      final feedURL = event.isInland ? urlAppcastInland : urlAppCastOverseas;
-      await autoUpdater.setFeedURL(feedURL);
-      await autoUpdater.checkForUpdates();
-      await autoUpdater.setScheduledCheckInterval(3600);
-    }
-  }
-
-  void _onNewVersionAvailable(
-      HomeNewVersionAvailable event, Emitter<HomeState> emit) async {
-    final updateAssets = event.assets;
-
-    String name = "";
-    String url = "";
-
-    updateAssets.forEach((asset) {
-      if (Platform.isMacOS) {
-        if (asset.name.endsWith(".dmg")) {
-          name = asset.name;
-          url = asset.url;
-        }
-      } else if (Platform.isWindows) {
-        if (asset.name.endsWith(".exe")) {
-          name = asset.name;
-          url = asset.url;
-        }
-      } else {
-        if (asset.name.endsWith(".AppImage")) {
-          name = asset.name;
-          url = asset.url;
-        }
-      }
-    });
-
-    emit(state.copyWith(
-        updateCheckStatus: UpdateCheckStatusUnit(
-            status: UpdateCheckStatus.success,
-            isAutoCheck: event.isAutoCheck,
-            hasUpdateAvailable: true,
-            publishTime: event.publishTime,
-            version: event.version,
-            updateInfo: event.updateInfo,
-            url: url,
-            name: name)));
-  }
 
   void _onProgressIndicatorStatusChanged(
       HomeProgressIndicatorStatusChanged event, Emitter<HomeState> emit) async {
@@ -190,17 +67,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     _progressIndicatorStreamController.add(event.status);
   }
 
-  void _onUpdateDownloadStatusChanged(
-      HomeUpdateDownloadStatusChanged event, Emitter<HomeState> emit) async {
-    if (_updateDownloadStatusController.isClosed) return;
-
-    _updateDownloadStatusController.add(event.status);
-  }
-
-  void _onUpdateCheckStatusChanged(
-      HomeCheckUpdateStatusChanged event, Emitter<HomeState> emit) async {
-    emit(state.copyWith(updateCheckStatus: event.status));
-  }
 
   void _onUpdateMobileInfo(
       HomeUpdateMobileInfo event, Emitter<HomeState> emit) {
@@ -210,7 +76,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   @override
   Future<void> close() {
     _progressIndicatorStreamController.close();
-    _updateDownloadStatusController.close();
+    _updateMobileInfoStreamController.close();
     return super.close();
   }
 }

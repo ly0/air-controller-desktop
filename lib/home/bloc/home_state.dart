@@ -13,56 +13,22 @@ extension HomeTabX  on HomeTab {
   }
 }
 
-enum UpdateCheckStatus { initial, start, failure, success }
-
-class UpdateCheckStatusUnit extends Equatable {
-  final UpdateCheckStatus status;
-  final bool isAutoCheck;
-  final String? failureReason;
-  final bool hasUpdateAvailable;
-  final String? version;
-  final int? publishTime;
-  final String? updateInfo;
-  final String? url;
-  final String? name;
-
-  const UpdateCheckStatusUnit({
-     this.status = UpdateCheckStatus.initial,
-    this.isAutoCheck = true,
-    this.failureReason,
-    this.hasUpdateAvailable = false,
-    this.version = null,
-    this.publishTime = null,
-    this.updateInfo = null,
-    this.url = null,
-    this.name = null,
-  });
-
-  @override
-  List<Object?> get props => [status, isAutoCheck, failureReason, hasUpdateAvailable,
-    version, publishTime, updateInfo, url, name];
-}
 
 class HomeState extends Equatable {
   final HomeTab tab;
-  final UpdateCheckStatusUnit updateCheckStatus;
 
   const HomeState({
     this.tab = HomeTab.image,
-    this.updateCheckStatus = const UpdateCheckStatusUnit()
   });
 
   @override
-  List<Object?> get props => [tab, updateCheckStatus];
+  List<Object?> get props => [tab];
 
   HomeState copyWith({
     HomeTab? tab,
-    UpdateDownloadStatusUnit? updateDownloadStatus,
-    UpdateCheckStatusUnit? updateCheckStatus
   }) {
     return HomeState(
       tab: tab ?? this.tab,
-      updateCheckStatus: updateCheckStatus ?? this.updateCheckStatus
     );
   }
 }

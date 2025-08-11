@@ -8,7 +8,6 @@ import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/repository/contact_repository.dart';
 import 'package:air_controller/toolbox_home/view/toolbox_flow.dart';
-import 'package:flowder/flowder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -34,7 +33,6 @@ import '../../util/common_util.dart';
 import '../../util/event_bus.dart';
 import '../../util/system_app_launcher.dart';
 import '../../video_home/view/video_home_page.dart';
-import '../../widget/update_check_dialog_ui.dart';
 import '../bloc/home_bloc.dart';
 
 class HomePage extends StatelessWidget {
@@ -71,8 +69,7 @@ class HomeBlocProviderView extends StatelessWidget {
     return BlocProvider(
       create: (_) => HomeBloc(
           commonRepository: context.read<CommonRepository>())
-        ..add(const HomeSubscriptionRequested())
-        ..add(HomeCheckUpdateRequested(isInland: CommonUtil.isInland(context))),
+        ..add(const HomeSubscriptionRequested()),
       child: HomeView(),
     );
   }
@@ -95,8 +92,6 @@ class _HomeViewState extends State<HomeView> {
   bool _isPopupIconDown = false;
   bool _isPopupIconHover = false;
 
-  DownloaderCore? _downloaderCore;
-  String? _downloadUpdateDir;
   StreamSubscription<UpdateMobileInfo>? _updateMobileInfoSubscription;
 
   @override
@@ -109,8 +104,6 @@ class _HomeViewState extends State<HomeView> {
     HomeTab tab = context.select((HomeBloc bloc) => bloc.state.tab);
     Stream<HomeLinearProgressIndicatorStatus> progressIndicatorStream =
         context.select((HomeBloc bloc) => bloc.progressIndicatorStream);
-    Stream<UpdateDownloadStatusUnit> updateDownloadStatusStream =
-        context.select((HomeBloc bloc) => bloc.updateDownloadStatusStream);
     Stream<MobileInfo> updateMobileInfoStream =
         context.select((HomeBloc bloc) => bloc.updateMobileInfoStream);
 
@@ -135,82 +128,7 @@ class _HomeViewState extends State<HomeView> {
 
     final pageContext = context;
 
-    return MultiBlocListener(
-        listeners: [
-          BlocListener<HomeBloc, HomeState>(
-            listener: (context, state) {
-              UpdateCheckStatusUnit updateCheckStatus = state.updateCheckStatus;
-
-              if (updateCheckStatus.status == UpdateCheckStatus.success) {
-                if (!updateCheckStatus.isAutoCheck) {
-                  SmartDialog.dismiss();
-                }
-
-                if (updateCheckStatus.hasUpdateAvailable) {
-                  showDialog(
-                      context: context,
-                      builder: (context) {
-                        int publishTime =
-                            state.updateCheckStatus.publishTime ?? 0;
-
-                        final df = DateFormat.yMMMMd(
-                                context.currentAppLocale.toString())
-                            .addPattern("HH:mm:ss");
-                        String publishTimeStr = df.format(
-                            DateTime.fromMillisecondsSinceEpoch(publishTime));
-
-                        return UpdateCheckDialogUI(
-                          title: context.l10n.updateDialogTitle,
-                          version: state.updateCheckStatus.version ?? "",
-                          date: publishTimeStr,
-                          updateInfo: state.updateCheckStatus.updateInfo ?? "",
-                          updateButtonText: "Download update",
-                          onCloseClick: () {
-                            Navigator.of(context).pop();
-                          },
-                          onSeeMoreClick: () {
-                            SystemAppLauncher.openUrl(
-                                Constant.URL_VERSION_LIST);
-                          },
-                          onUpdateClick: () {
-                            String? name = state.updateCheckStatus.name;
-                            String? url = state.updateCheckStatus.url;
-
-                            if (null != name && null != url) {
-                              _tryToDownloadUpdate(pageContext, name, url);
-                            } else {
-                              log("HomePage, onUpdateClick, $name, $url");
-                            }
-                          },
-                        );
-                      },
-                      barrierDismissible: false);
-                } else {
-                  if (!updateCheckStatus.isAutoCheck) {
-                    SmartDialog.showToast(context.l10n.noUpdatesAvailable);
-                  }
-                }
-              }
-
-              if (updateCheckStatus.status == UpdateCheckStatus.start &&
-                  !updateCheckStatus.isAutoCheck) {
-                SmartDialog.showLoading();
-              }
-
-              if (updateCheckStatus.status == UpdateCheckStatus.failure &&
-                  !updateCheckStatus.isAutoCheck) {
-                SmartDialog.dismiss();
-
-                SmartDialog.showToast(updateCheckStatus.failureReason ??
-                    context.l10n.failedToCheckForUpdates);
-              }
-            },
-            listenWhen: (previous, current) {
-              return previous.updateCheckStatus != current.updateCheckStatus;
-            },
-          ),
-        ],
-        child: Row(
+    return Row(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.max,
             children: [
@@ -613,166 +531,11 @@ class _HomeViewState extends State<HomeView> {
                     },
                     stream: progressIndicatorStream,
                   ),
-                  StreamBuilder(
-                      stream: updateDownloadStatusStream,
-                      builder: (context, snapshot) {
-                        UpdateDownloadStatusUnit? updateDownloadStatus = null;
-
-                        if (snapshot.hasData) {
-                          updateDownloadStatus =
-                              snapshot.data as UpdateDownloadStatusUnit;
-                        }
-
-                        return Visibility(
-                          child: Positioned(
-                              top: Constant.HOME_NAVI_BAR_HEIGHT,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          context.l10n.packageHasReady,
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                        Container(
-                                          child: Text(
-                                            "$_downloadUpdateDir",
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                          margin: EdgeInsets.only(left: 10),
-                                        )
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          child: OutlinedButton(
-                                            onPressed: () {
-                                              context.read<HomeBloc>().add(
-                                                  HomeUpdateDownloadStatusChanged(
-                                                      UpdateDownloadStatusUnit(
-                                                          status:
-                                                              UpdateDownloadStatus
-                                                                  .initial)));
-                                            },
-                                            child: Text(
-                                              context.l10n.iKnow,
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14),
-                                            ),
-                                            style: ButtonStyle(
-                                                backgroundColor:
-                                                    MaterialStateColor
-                                                        .resolveWith((states) {
-                                                  if (states.contains(
-                                                      MaterialState.pressed)) {
-                                                    return Color(0xbbd5362c);
-                                                  }
-
-                                                  return Color(0xffd5362c);
-                                                }),
-                                                fixedSize:
-                                                    MaterialStateProperty.all(
-                                                        Size(80, 26)),
-                                                minimumSize:
-                                                    MaterialStateProperty.all(
-                                                        Size(0, 0))),
-                                          ),
-                                          margin: EdgeInsets.only(left: 15),
-                                        )
-                                      ],
-                                    )
-                                  ],
-                                ),
-                                height: 40,
-                                color: Color(0xff3174de),
-                                padding: EdgeInsets.only(left: 15, right: 15),
-                              )),
-                          visible: updateDownloadStatus?.status ==
-                              UpdateDownloadStatus.success,
-                        );
-                      })
                 ],
               )),
-            ]));
+            ]);
   }
 
-  void _tryToDownloadUpdate(BuildContext context, String name, String url) {
-    CommonUtil.openFilePicker(context.l10n.chooseDownloadDir, (dir) async {
-      Navigator.pop(context);
-      _downloadUpdateToDir(context, name, url, dir);
-
-      SharedPreferences pref = await SharedPreferences.getInstance();
-      pref.setString(Constant.KEY_UPDATE_DOWNLOAD_DIR, dir);
-
-      _downloadUpdateDir = dir;
-    }, (error) {
-      log("Home page, _tryToDownloadUpdate, error: $error");
-    });
-  }
-
-  void _downloadUpdateToDir(
-      BuildContext context, String name, String url, String dir) async {
-    context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
-        HomeLinearProgressIndicatorStatus(visible: true)));
-
-    context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
-        UpdateDownloadStatusUnit(status: UpdateDownloadStatus.start)));
-
-    var options = DownloaderUtils(
-        progress: ProgressImplementation(),
-        file: File("$dir/$name"),
-        onDone: () {
-          context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
-              HomeLinearProgressIndicatorStatus(
-                  visible: false, current: 0, total: 0)));
-
-          context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
-              UpdateDownloadStatusUnit(
-                  status: UpdateDownloadStatus.success,
-                  name: name,
-                  path: "$dir/$name")));
-        },
-        progressCallback: (current, total) {
-          log("_downloadUpdateToDir, name: $name, current: $current, total: $total");
-          context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
-              HomeLinearProgressIndicatorStatus(
-                  visible: true, current: current, total: total)));
-
-          context
-              .read<HomeBloc>()
-              .add(HomeUpdateDownloadStatusChanged(UpdateDownloadStatusUnit(
-                status: UpdateDownloadStatus.downloading,
-              )));
-        });
-
-    try {
-      if (null == _downloaderCore) {
-        _downloaderCore = await Flowder.download(url, options);
-      } else {
-        _downloaderCore?.download(url, options);
-      }
-    } catch (e) {
-      context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
-          HomeLinearProgressIndicatorStatus(
-              visible: false, current: 0, total: 0)));
-
-      context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
-          UpdateDownloadStatusUnit(
-              status: UpdateDownloadStatus.failure,
-              failureReason: "${e.toString()}")));
-
-      SmartDialog.showToast(context.l10n.downloadUpdateFailure);
-    }
-  }
 
   void _exitFileManager(BuildContext context) {
     DeviceConnectionManager.instance.currentDevice = null;

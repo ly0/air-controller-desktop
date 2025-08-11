@@ -77,7 +77,6 @@ dependencies:
   desktop_drop: ^0.4.4
   archive: ^3.3.0
   google_fonts: ^4.0.5
-  auto_updater: ^0.1.6
 
 dev_dependencies:
   flutter_test:
