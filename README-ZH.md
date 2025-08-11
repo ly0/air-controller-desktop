@@ -86,17 +86,6 @@ flutter config --enable-<platform>-desktop
 
 [提交功能建议](https://github.com/ly0/air-controller-desktop/issues/new?assignees=&labels=&template=feature_request.md&title=)
 
-# 支持
-如果你喜欢这个项目，可通过以下几种方式支持我，无论是任何形式的支持，都不胜感激！
-
-* 点击项目右上角star支持我
-* 如果你是一个UI设计师，可联系我，提供更好的UI设计资源，会有回馈
-* 点击下方**爱发电**或扫描微信支付宝打赏任意金额均可
-
-[![](https://img.shields.io/badge/-%E6%9D%A5%E7%88%B1%E5%8F%91%E7%94%B5%E6%94%AF%E6%8C%81%E6%88%91-%23977ce4?style=for-the-badge&logo=buymeacoffee&logoColor=%23ffffff)](https://afdian.net/@ouyangfeng2016)
-
-![](https://raw.githubusercontent.com/yuanhoujun/material/main/Pay/wechat_alipay.png)
-
 # 感谢
 [AndServer](https://github.com/yanzhenjie/AndServer)
 
@@ -105,13 +94,6 @@ flutter config --enable-<platform>-desktop
 [window_manager](https://github.com/leanflutter/window_manager)
 
 [contacts-android](https://github.com/vestrel00/contacts-android)
-
-# 交流
-QQ群: 329673958
-
-小飞机: [AirController](https://t.me/aircontroller2022)
-
-邮箱: [ouyangfeng2016@gmail.com](mailto:ouyangfeng2016@gmail.com)
 
 # License
 Copyright (c) 2022 Feng Ouyang
