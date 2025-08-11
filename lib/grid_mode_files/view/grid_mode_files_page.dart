@@ -6,6 +6,7 @@ import 'package:air_controller/home/bloc/home_bloc.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/model/display_type.dart';
 import 'package:air_controller/util/sound_effect.dart';
+import 'package:air_controller/widget/lazy_loading_image.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
@@ -428,7 +429,7 @@ class _FileGridItemState extends State<_FileGridItem> {
       String imageUrl =
           "${DeviceConnectionManager.instance.rootURL}/stream/image/thumbnail2?path=${encodedPath}&width=400&height=400";
       icon = Container(
-        child: CachedNetworkImage(
+        child: LazyLoadingImage(
             imageUrl: imageUrl,
             fit: BoxFit.cover,
             width: 100,
@@ -436,10 +437,8 @@ class _FileGridItemState extends State<_FileGridItem> {
             memCacheWidth: 400,
             fadeOutDuration: Duration.zero,
             fadeInDuration: Duration.zero,
-            errorWidget: (context, url, error) {
-              return Image.asset("assets/icons/brokenImage.png",
-                  width: 100, height: 100);
-            }),
+            errorWidget: Image.asset("assets/icons/brokenImage.png",
+                width: 100, height: 100)),
         decoration: BoxDecoration(
             border: new Border.all(color: Color(0xffdedede), width: 1),
             borderRadius: new BorderRadius.all(Radius.circular(2.0))),
@@ -452,7 +451,7 @@ class _FileGridItemState extends State<_FileGridItem> {
           "${DeviceConnectionManager.instance.rootURL}/stream/video/thumbnail2?path=${file.data.folder}/${file.data.name}&width=400&height=400";
       icon = Stack(
         children: [
-          CachedNetworkImage(
+          LazyLoadingImage(
             imageUrl: videoThumbnail,
             fit: BoxFit.cover,
             width: 100,

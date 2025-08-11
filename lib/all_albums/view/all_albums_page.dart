@@ -5,8 +5,8 @@ import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/util/sound_effect.dart';
+import 'package:air_controller/widget/lazy_loading_image.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1015,7 +1015,7 @@ class _AlbumsListItemState extends State<_AlbumsListItem> {
                           visible: widget.album.photoNum > 2 ? true : false,
                         ),
                         Container(
-                          child: CachedNetworkImage(
+                          child: LazyLoadingImage(
                               imageUrl: coverURL,
                               fit: BoxFit.cover,
                               width: imageWidth,
@@ -1023,12 +1023,10 @@ class _AlbumsListItemState extends State<_AlbumsListItem> {
                               memCacheWidth: 400,
                               fadeOutDuration: Duration.zero,
                               fadeInDuration: Duration.zero,
-                              errorWidget: (context, url, error) {
-                                return Image.asset(
+                              errorWidget: Image.asset(
                                     "assets/icons/brokenImage.png",
                                     width: imageWidth,
-                                    height: imageWidth);
-                              }),
+                                    height: imageWidth)),
                           padding: EdgeInsets.all(imagePadding),
                           decoration: BoxDecoration(
                               color: Colors.white,

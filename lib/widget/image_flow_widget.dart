@@ -1,5 +1,6 @@
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/widget/simple_gesture_detector.dart';
+import 'package:air_controller/widget/lazy_loading_image.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'dart:collection';
@@ -319,7 +320,7 @@ class _ImageGridItem extends StatelessWidget {
       child: Container(
         child: SimpleGestureDetector(
           child: Container(
-              child: CachedNetworkImage(
+              child: LazyLoadingImage(
                   imageUrl:
                       "$rootUrl/stream/image/thumbnail/${image.id}/${width.toInt() * 4}/${height.toInt() * 4}",
                   fit: BoxFit.cover,
@@ -329,10 +330,8 @@ class _ImageGridItem extends StatelessWidget {
                       (width > height ? width * 2 : height * 2).toInt(),
                   fadeOutDuration: Duration.zero,
                   fadeInDuration: Duration.zero,
-                  errorWidget: (context, url, error) {
-                    return Image.asset("assets/icons/brokenImage.png",
-                        width: width, height: height);
-                  }),
+                  errorWidget: Image.asset("assets/icons/brokenImage.png",
+                      width: width, height: height)),
               decoration: BoxDecoration(
                   border: new Border.all(
                       color: isChecked ? _checkedBorderColor : _borderColor,

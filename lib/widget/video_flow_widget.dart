@@ -1,4 +1,5 @@
 import 'package:air_controller/widget/simple_gesture_detector.dart';
+import 'package:air_controller/widget/lazy_loading_image.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -81,7 +82,7 @@ class _VideoFlowWidgetState extends State<VideoFlowWidget> {
                 Container(
                   child: SimpleGestureDetector(
                     child: Container(
-                        child: CachedNetworkImage(
+                        child: LazyLoadingImage(
                           imageUrl:
                               "${widget.rootUrl}/stream/video/thumbnail/${videoItem.id}/200/200",
                           fit: BoxFit.cover,
