@@ -52,37 +52,6 @@ class AirControllerClient {
     dio.options.connectTimeout = 0;
     dio.options.receiveTimeout = 0;
     
-    // 添加请求拦截器用于调试
-    dio.interceptors.add(DioCore.InterceptorsWrapper(
-      onRequest: (options, handler) {
-        print("[HTTP调试] ========================================");
-        print("[HTTP调试] 发送请求:");
-        print("[HTTP调试]   URL: ${options.uri}");
-        print("[HTTP调试]   方法: ${options.method}");
-        print("[HTTP调试]   Headers: ${options.headers}");
-        print("[HTTP调试]   Data: ${options.data}");
-        print("[HTTP调试]   QueryParameters: ${options.queryParameters}");
-        handler.next(options);
-      },
-      onResponse: (response, handler) {
-        print("[HTTP调试] 收到响应:");
-        print("[HTTP调试]   状态码: ${response.statusCode}");
-        print("[HTTP调试]   消息: ${response.statusMessage}");
-        print("[HTTP调试]   Headers: ${response.headers}");
-        handler.next(response);
-      },
-      onError: (DioCore.DioError e, handler) {
-        print("[HTTP调试] ❌ 请求失败:");
-        print("[HTTP调试]   错误类型: ${e.type}");
-        print("[HTTP调试]   消息: ${e.message}");
-        print("[HTTP调试]   响应状态码: ${e.response?.statusCode}");
-        print("[HTTP调试]   响应消息: ${e.response?.statusMessage}");
-        print("[HTTP调试]   响应数据: ${e.response?.data}");
-        print("[HTTP调试]   请求URL: ${e.requestOptions.uri}");
-        print("[HTTP调试] ========================================");
-        handler.next(e);
-      },
-    ));
   }
 
   Future<List<ImageItem>> getAllImages() async {
@@ -1510,11 +1479,6 @@ class AirControllerClient {
       Function(String error)? onError,
       String? fileName = null}) async {
     
-    print("[下载调试] ========================================");
-    print("[下载调试] 开始下载图片");
-    print("[下载调试] 图片数量: ${images.length}");
-    print("[下载调试] 保存目录: $dir");
-    print("[下载调试] ========================================");
     
     try {
       // 确保目标目录存在
@@ -1545,7 +1509,6 @@ class AirControllerClient {
           imageName = fileName;
         }
         
-        print("[下载调试] 下载图片 ${i + 1}/${images.length}: $imageName");
         
         futures.add(
           dio.download(
@@ -1564,9 +1527,7 @@ class AirControllerClient {
           ).then((_) {
             downloadedFiles++;
             downloadedFileNames.add(imageName);
-            print("[下载调试] 图片 $imageName 下载完成 ($downloadedFiles/$totalFiles)");
           }).catchError((e) {
-            print("[下载调试] 下载图片 $imageName 失败: $e");
             throw e;
           })
         );
@@ -1575,7 +1536,6 @@ class AirControllerClient {
       // 等待所有图片下载完成
       await Future.wait(futures);
       
-      print("[下载调试] 所有图片下载完成！共 $downloadedFiles 个文件");
       
       // 只在所有文件都下载完成后调用一次 onDone
       // 如果是单个文件，传递文件名；如果是多个文件，传递一个汇总信息
@@ -1588,8 +1548,6 @@ class AirControllerClient {
       }
       
     } catch (e) {
-      print("[下载调试] ❌ 批量下载失败！");
-      print("[下载调试] 错误信息: $e");
       onError?.call(e.toString());
     }
   }
@@ -1602,11 +1560,6 @@ class AirControllerClient {
       Function(String error)? onError,
       String? fileName = null}) async {
     
-    print("[下载调试] ========================================");
-    print("[下载调试] 开始下载相册");
-    print("[下载调试] 相册数量: ${albums.length}");
-    print("[下载调试] 保存目录: $dir");
-    print("[下载调试] ========================================");
     
     try {
       // 确保目标目录存在
@@ -1621,11 +1574,9 @@ class AirControllerClient {
       
       // 遍历每个相册
       for (final album in albums) {
-        print("[下载调试] 获取相册 '${album.name}' 中的图片...");
         
         // 获取相册中的所有图片
         final images = await getImagesInAlbum(album);
-        print("[下载调试] 相册 '${album.name}' 包含 ${images.length} 张图片");
         
         if (images.isEmpty) continue;
         
@@ -1666,20 +1617,16 @@ class AirControllerClient {
             ).then((_) {
               downloadedFiles++;
               downloadedFileNames.add(imageName);
-              print("[下载调试] 图片 $imageName 下载完成 ($downloadedFiles/$totalFiles)");
-            }).catchError((e) {
-              print("[下载调试] 下载图片 $imageName 失败: $e");
-              throw e;
+              }).catchError((e) {
+                throw e;
             })
           );
         }
         
         // 等待当前相册的所有图片下载完成
         await Future.wait(futures);
-        print("[下载调试] 相册 '${album.name}' 下载完成");
       }
       
-      print("[下载调试] 所有相册下载完成！共 $downloadedFiles 个文件");
       
       // 只在所有文件都下载完成后调用一次 onDone
       if (onDone != null && downloadedFileNames.isNotEmpty) {
@@ -1687,8 +1634,6 @@ class AirControllerClient {
       }
       
     } catch (e) {
-      print("[下载调试] ❌ 相册下载失败！");
-      print("[下载调试] 错误信息: $e");
       onError?.call(e.toString());
     }
   }
@@ -1701,11 +1646,6 @@ class AirControllerClient {
       Function(String error)? onError,
       String? fileName = null}) async {
     
-    print("[下载调试] ========================================");
-    print("[下载调试] 开始下载音频");
-    print("[下载调试] 音频数量: ${audios.length}");
-    print("[下载调试] 保存目录: $dir");
-    print("[下载调试] ========================================");
     
     try {
       // 确保目标目录存在
@@ -1736,7 +1676,6 @@ class AirControllerClient {
           audioName = fileName;
         }
         
-        print("[下载调试] 下载音频 ${i + 1}/${audios.length}: $audioName");
         
         futures.add(
           dio.download(
@@ -1754,9 +1693,7 @@ class AirControllerClient {
           ).then((_) {
             downloadedFiles++;
             downloadedFileNames.add(audioName);
-            print("[下载调试] 音频 $audioName 下载完成 ($downloadedFiles/$totalFiles)");
           }).catchError((e) {
-            print("[下载调试] 下载音频 $audioName 失败: $e");
             throw e;
           })
         );
@@ -1765,7 +1702,6 @@ class AirControllerClient {
       // 等待所有音频下载完成
       await Future.wait(futures);
       
-      print("[下载调试] 所有音频下载完成！共 $downloadedFiles 个文件");
       
       // 只在所有文件都下载完成后调用一次 onDone
       if (onDone != null) {
@@ -1777,8 +1713,6 @@ class AirControllerClient {
       }
       
     } catch (e) {
-      print("[下载调试] ❌ 音频下载失败！");
-      print("[下载调试] 错误信息: $e");
       onError?.call(e.toString());
     }
   }
@@ -1791,11 +1725,6 @@ class AirControllerClient {
       Function(String error)? onError,
       String? fileName = null}) async {
     
-    print("[下载调试] ========================================");
-    print("[下载调试] 开始下载视频");
-    print("[下载调试] 视频数量: ${videos.length}");
-    print("[下载调试] 保存目录: $dir");
-    print("[下载调试] ========================================");
     
     try {
       // 确保目标目录存在
@@ -1826,7 +1755,6 @@ class AirControllerClient {
           videoName = fileName;
         }
         
-        print("[下载调试] 下载视频 ${i + 1}/${videos.length}: $videoName");
         
         futures.add(
           dio.download(
@@ -1844,9 +1772,7 @@ class AirControllerClient {
           ).then((_) {
             downloadedFiles++;
             downloadedFileNames.add(videoName);
-            print("[下载调试] 视频 $videoName 下载完成 ($downloadedFiles/$totalFiles)");
           }).catchError((e) {
-            print("[下载调试] 下载视频 $videoName 失败: $e");
             throw e;
           })
         );
@@ -1855,7 +1781,6 @@ class AirControllerClient {
       // 等待所有视频下载完成
       await Future.wait(futures);
       
-      print("[下载调试] 所有视频下载完成！共 $downloadedFiles 个文件");
       
       // 只在所有文件都下载完成后调用一次 onDone
       if (onDone != null) {
@@ -1867,8 +1792,6 @@ class AirControllerClient {
       }
       
     } catch (e) {
-      print("[下载调试] ❌ 视频下载失败！");
-      print("[下载调试] 错误信息: $e");
       onError?.call(e.toString());
     }
   }
@@ -1881,11 +1804,6 @@ class AirControllerClient {
       Function(String error)? onError,
       String? fileName = null}) async {
     
-    print("[下载调试] ========================================");
-    print("[下载调试] 开始下载视频文件夹");
-    print("[下载调试] 文件夹数量: ${videoFolders.length}");
-    print("[下载调试] 保存目录: $dir");
-    print("[下载调试] ========================================");
     
     try {
       // 确保目标目录存在
@@ -1900,11 +1818,9 @@ class AirControllerClient {
       
       // 遍历每个视频文件夹
       for (final videoFolder in videoFolders) {
-        print("[下载调试] 获取文件夹 '${videoFolder.name}' 中的视频...");
         
         // 获取文件夹中的所有视频
         final videos = await getVideosInFolder(videoFolder.id);
-        print("[下载调试] 文件夹 '${videoFolder.name}' 包含 ${videos.length} 个视频");
         
         if (videos.isEmpty) continue;
         
@@ -1945,20 +1861,16 @@ class AirControllerClient {
             ).then((_) {
               downloadedFiles++;
               downloadedFileNames.add(videoName);
-              print("[下载调试] 视频 $videoName 下载完成 ($downloadedFiles/$totalFiles)");
-            }).catchError((e) {
-              print("[下载调试] 下载视频 $videoName 失败: $e");
-              throw e;
+              }).catchError((e) {
+                throw e;
             })
           );
         }
         
         // 等待当前文件夹的所有视频下载完成
         await Future.wait(futures);
-        print("[下载调试] 文件夹 '${videoFolder.name}' 下载完成");
       }
       
-      print("[下载调试] 所有视频文件夹下载完成！共 $downloadedFiles 个文件");
       
       // 只在所有文件都下载完成后调用一次 onDone
       if (onDone != null && downloadedFileNames.isNotEmpty) {
@@ -1966,8 +1878,6 @@ class AirControllerClient {
       }
       
     } catch (e) {
-      print("[下载调试] ❌ 视频文件夹下载失败！");
-      print("[下载调试] 错误信息: $e");
       onError?.call(e.toString());
     }
   }

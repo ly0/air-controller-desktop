@@ -18,7 +18,6 @@ class CmdClient {
 
   void connect(String ip) async {
     _socket = await Socket.connect(ip, Constant.PORT_CMD);
-    print('Connected to: ${_socket?.remoteAddress.address}:${_socket?.remotePort}');
 
     _isConnected = true;
     _onConnected?.call();
