@@ -33,13 +33,15 @@ class ImageDetailPage extends StatelessWidget {
   final int _index;
   final Source? source;
   final dynamic extra;
+  final VoidCallback? onBack;
 
   ImageDetailPage(
       {required GlobalKey<NavigatorState> navigatorKey,
       required List<ImageItem> images,
       required int index,
       this.source,
-      this.extra})
+      this.extra,
+      this.onBack})
       : _navigatorKey = navigatorKey,
         _images = images,
         _index = index;
@@ -53,6 +55,7 @@ class ImageDetailPage extends StatelessWidget {
         navigatorKey: _navigatorKey,
         source: source,
         extra: extra,
+        onBack: onBack,
       ),
     );
   }
@@ -62,12 +65,14 @@ class ImageDetailView extends StatefulWidget {
   final GlobalKey<NavigatorState> navigatorKey;
   final Source? source;
   final dynamic extra;
+  final VoidCallback? onBack;
 
   const ImageDetailView(
       {Key? key,
       required this.navigatorKey,
       required this.source,
-      required this.extra})
+      required this.extra,
+      this.onBack})
       : super(key: key);
 
   @override
@@ -230,6 +235,15 @@ class _ImageDetailViewState extends State<ImageDetailView> {
             focusNode: _imageDetailFocusNode,
             canRequestFocus: true,
             onKey: (node, event) {
+              if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
+                if (widget.onBack != null) {
+                  widget.onBack!();
+                } else {
+                  widget.navigatorKey.currentState?.pop();
+                }
+                return KeyEventResult.handled;
+              }
+
               if (event.isKeyPressed(LogicalKeyboardKey.backspace)) {
                 _deleteImage(pageContext, images[currentIndex]);
                 return KeyEventResult.handled;
@@ -303,8 +317,12 @@ class _ImageDetailViewState extends State<ImageDetailView> {
                                           margin: EdgeInsets.only(left: 15),
                                         ),
                                         onTap: () {
-                                          widget.navigatorKey.currentState
-                                              ?.pop();
+                                          if (widget.onBack != null) {
+                                            widget.onBack!();
+                                          } else {
+                                            widget.navigatorKey.currentState
+                                                ?.pop();
+                                          }
                                         },
                                         onTapDown: (detail) {
                                           setState(() {

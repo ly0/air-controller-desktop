@@ -9,13 +9,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
+import '../../all_images/model/image_detail_arguments.dart';
 import '../../constant.dart';
 import '../../grid_mode_files/view/grid_mode_files_page.dart';
 import '../../home/bloc/home_bloc.dart';
+import '../../image_detail/view/image_detail_page.dart';
 import '../../list_mode_files/view/list_mode_files_page.dart';
 import '../../model/display_type.dart';
+import '../../model/file_item.dart';
 import '../../model/file_node.dart';
+import '../../model/image_item.dart';
+import '../../network/device_connection_manager.dart';
 import '../../repository/file_repository.dart';
+import '../../repository/image_repository.dart';
 import '../../util/common_util.dart';
 import '../../util/context_menu_helper.dart';
 import '../../util/sound_effect.dart';
@@ -59,6 +65,10 @@ class FileHomeViewState extends State<FileHomeView>
 
   bool _isControlPressed = false;
   bool _isShiftPressed = false;
+  
+  // For image viewer overlay
+  List<ImageItem>? _viewingImages;
+  int? _viewingImageIndex;
 
   ProgressIndicatorDialog? _progressIndicatorDialog;
 
@@ -361,6 +371,17 @@ class FileHomeViewState extends State<FileHomeView>
                     .read<FileHomeBloc>()
                     .add(FileHomeKeyStatusChanged(status));
 
+                // Handle ESC key for closing image viewer
+                if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
+                  if (_viewingImages != null) {
+                    setState(() {
+                      _viewingImages = null;
+                      _viewingImageIndex = null;
+                    });
+                    return KeyEventResult.handled;
+                  }
+                }
+
                 if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
                   bool isRenamingMode =
                       context.read<FileHomeBloc>().state.isRenamingMode;
@@ -527,9 +548,32 @@ class FileHomeViewState extends State<FileHomeView>
         thickness: 1.0,
       ),
       Expanded(
-          child: IndexedStack(
-        index: displayType.index,
-        children: [GridModeFilesPage(), ListModeFilesPage()],
+          child: Stack(
+        children: [
+          IndexedStack(
+            index: displayType.index,
+            children: [GridModeFilesPage(), ListModeFilesPage()],
+          ),
+          if (_viewingImages != null && _viewingImageIndex != null)
+            Container(
+              color: Colors.black,
+              child: RepositoryProvider.value(
+                value: context.read<ImageRepository>(),
+                child: ImageDetailPage(
+                  navigatorKey: GlobalKey<NavigatorState>(),
+                  images: _viewingImages!,
+                  index: _viewingImageIndex!,
+                  source: widget.isOnlyDownloadDir ? Source.allImages : Source.allImages,
+                  onBack: () {
+                    setState(() {
+                      _viewingImages = null;
+                      _viewingImageIndex = null;
+                    });
+                  },
+                ),
+              ),
+            ),
+        ],
       )),
       Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
       Container(
@@ -580,7 +624,7 @@ class FileHomeViewState extends State<FileHomeView>
           if (current.data.isDir) {
             pageContext.read<FileHomeBloc>().add(FileHomeOpenDir(current));
           } else {
-            SystemAppLauncher.openFile(current.data);
+            _openFile(pageContext, current.data, checkedFiles);
           }
         },
       ),
@@ -618,6 +662,71 @@ class FileHomeViewState extends State<FileHomeView>
         },
       )
     ]);
+  }
+
+  void _openFile(BuildContext context, FileItem file, List<FileNode> checkedFiles) {
+    // Check if the file is an image based on its extension
+    String fileName = file.name.toLowerCase();
+    bool isImage = false;
+    
+    for (String suffix in Constant.allImageSuffix) {
+      if (fileName.endsWith('.$suffix')) {
+        isImage = true;
+        break;
+      }
+    }
+    
+    if (isImage) {
+      // Convert FileItem to ImageItem for the image viewer
+      List<ImageItem> imageItems = [];
+      int currentIndex = 0;
+      
+      // Get all image files from the current directory
+      List<FileNode> allFiles = context.read<FileHomeBloc>().state.files;
+      for (int i = 0; i < allFiles.length; i++) {
+        FileNode node = allFiles[i];
+        if (!node.data.isDir) {
+          String nodeName = node.data.name.toLowerCase();
+          bool nodeIsImage = false;
+          for (String suffix in Constant.allImageSuffix) {
+            if (nodeName.endsWith('.$suffix')) {
+              nodeIsImage = true;
+              break;
+            }
+          }
+          
+          if (nodeIsImage) {
+            // Create ImageItem from FileItem
+            ImageItem imageItem = ImageItem(
+              node.data.path, // Use path as id
+              '', // mimeType
+              node.data.path,
+              0, // width
+              0, // height
+              node.data.changeDate,
+              node.data.changeDate,
+              node.data.size
+            );
+            imageItems.add(imageItem);
+            
+            if (node.data.path == file.path) {
+              currentIndex = imageItems.length - 1;
+            }
+          }
+        }
+      }
+      
+      if (imageItems.isNotEmpty) {
+        // Open image viewer overlay
+        showImageViewer(imageItems, currentIndex);
+      } else {
+        // If no images found, fall back to opening in browser
+        SystemAppLauncher.openFile(file);
+      }
+    } else {
+      // For non-image files, open with system default
+      SystemAppLauncher.openFile(file);
+    }
   }
 
   void _startCopyFiles(BuildContext context, List<FileNode> files, String dir) {
@@ -661,6 +770,13 @@ class FileHomeViewState extends State<FileHomeView>
           .add(FileHomeDeleteSubmitted(checkedFiles));
     }, (context) {
       Navigator.of(context, rootNavigator: true).pop();
+    });
+  }
+
+  void showImageViewer(List<ImageItem> images, int index) {
+    setState(() {
+      _viewingImages = images;
+      _viewingImageIndex = index;
     });
   }
 

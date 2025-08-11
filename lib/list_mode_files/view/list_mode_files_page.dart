@@ -10,13 +10,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../all_images/model/image_detail_arguments.dart';
 import '../../bootstrap.dart';
+import '../../constant.dart';
 import '../../constant_pool.dart';
 import '../../file_home/bloc/file_home_bloc.dart';
+import '../../file_home/view/file_home_page.dart';
 import '../../home/bloc/home_bloc.dart';
+import '../../image_detail/view/image_detail_page.dart';
 import '../../model/display_type.dart';
 import '../../model/file_item.dart';
 import '../../model/file_node.dart';
+import '../../model/image_item.dart';
+import '../../repository/image_repository.dart';
 import '../../util/common_util.dart';
 import '../../util/sound_effect.dart';
 import '../../util/system_app_launcher.dart';
@@ -287,7 +293,7 @@ class ListModeFilesView extends StatelessWidget {
             if (file.data.isDir) {
               context.read<FileHomeBloc>().add(FileHomeOpenDir(file));
             } else {
-              SystemAppLauncher.openFile(file.data);
+              _openFile(context, file.data, files);
             }
           },
         );
@@ -554,6 +560,73 @@ class ListModeFilesView extends StatelessWidget {
       context.read<FileHomeBloc>().add(FileHomeMenuStatusChanged(
           FileHomeMenuStatus(
               isOpened: true, position: event.position, current: file)));
+    }
+  }
+
+  void _openFile(BuildContext context, FileItem file, List<FileNode> allFiles) {
+    // Check if the file is an image based on its extension
+    String fileName = file.name.toLowerCase();
+    bool isImage = false;
+    
+    for (String suffix in Constant.allImageSuffix) {
+      if (fileName.endsWith('.$suffix')) {
+        isImage = true;
+        break;
+      }
+    }
+    
+    if (isImage) {
+      // Convert FileItem to ImageItem for the image viewer
+      List<ImageItem> imageItems = [];
+      int currentIndex = 0;
+      
+      // Get all image files from the current directory
+      for (int i = 0; i < allFiles.length; i++) {
+        FileNode node = allFiles[i];
+        if (!node.data.isDir) {
+          String nodeName = node.data.name.toLowerCase();
+          bool nodeIsImage = false;
+          for (String suffix in Constant.allImageSuffix) {
+            if (nodeName.endsWith('.$suffix')) {
+              nodeIsImage = true;
+              break;
+            }
+          }
+          
+          if (nodeIsImage) {
+            // Create ImageItem from FileItem
+            ImageItem imageItem = ImageItem(
+              node.data.path, // Use path as id
+              '', // mimeType
+              node.data.path,
+              0, // width
+              0, // height
+              node.data.changeDate,
+              node.data.changeDate,
+              node.data.size
+            );
+            imageItems.add(imageItem);
+            
+            if (node.data.path == file.path) {
+              currentIndex = imageItems.length - 1;
+            }
+          }
+        }
+      }
+      
+      if (imageItems.isNotEmpty) {
+        // Notify the parent file home page to show image viewer
+        final fileHomeState = context.findAncestorStateOfType<FileHomeViewState>();
+        if (fileHomeState != null) {
+          fileHomeState.showImageViewer(imageItems, currentIndex);
+        }
+      } else {
+        // If no images found, fall back to opening in browser
+        SystemAppLauncher.openFile(file);
+      }
+    } else {
+      // For non-image files, open with system default
+      SystemAppLauncher.openFile(file);
     }
   }
 
