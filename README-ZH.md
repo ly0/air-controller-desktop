@@ -1,9 +1,9 @@
 # ![](https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/images/logo.png)
 
-![GitHub (pre-)release](https://img.shields.io/github/release/air-controller/air-controller-desktop/all.svg?style=flat-square)
-![Release date](https://img.shields.io/github/release-date/air-controller/air-controller-desktop)
-[![Total downloads](https://img.shields.io/github/downloads/air-controller/air-controller-desktop/total.svg)](https://github.com/air-controller/air-controller-desktop/releases)[![](https://img.shields.io/github/issues/air-controller/air-controller-desktop)](https://github.com/air-controller/air-controller-desktop/issues)
-[![](https://img.shields.io/github/license/air-controller/air-controller-desktop)](https://github.com/air-controller/air-controller-desktop/blob/master/LICENSE)
+![GitHub (pre-)release](https://img.shields.io/github/release/ly0/air-controller-desktop/all.svg?style=flat-square)
+![Release date](https://img.shields.io/github/release-date/ly0/air-controller-desktop)
+[![Total downloads](https://img.shields.io/github/downloads/ly0/air-controller-desktop/total.svg)](https://github.com/ly0/air-controller-desktop/releases)[![](https://img.shields.io/github/issues/ly0/air-controller-desktop)](https://github.com/ly0/air-controller-desktop/issues)
+[![](https://img.shields.io/github/license/ly0/air-controller-desktop)](https://github.com/ly0/air-controller-desktop/blob/master/LICENSE)
 
 AirController是一个开源版本的[HandShaker](https://www.smartisan.com/apps/#/handshaker)，如果你使用过HandShaker，
 应该对AirController不会感到陌生！
@@ -17,13 +17,13 @@ AirController是一个开源版本的[HandShaker](https://www.smartisan.com/apps
 
 打开以下链接，选择apk文件下载安装即可。
 
-[https://github.com/air-controller/air-controller-mobile/releases](https://github.com/air-controller/air-controller-mobile/releases/latest)
+[https://github.com/ly0/air-controller-mobile/releases](https://github.com/ly0/air-controller-mobile/releases/latest)
 
 ### 下载最新版本的AirController桌面应用并安装
 
 打开以下链接，下载对应操作系统的应用安装即可。
 
-[https://github.com/air-controller/air-controller-desktop/releases](https://github.com/air-controller/air-controller-desktop/releases/latest)
+[https://github.com/ly0/air-controller-desktop/releases](https://github.com/ly0/air-controller-desktop/releases/latest)
 
 * Windows用户请下载exe格式文件
 * Linux用户请下载AppImage格式文件
@@ -78,13 +78,13 @@ flutter config --enable-<platform>-desktop
 # 问题反馈
 如果你在使用过程中，遇到了任何问题，可点击以下链接，提交问题详情，我会第一时间关注并尝试修复。
 
-[提交问题](https://github.com/air-controller/air-controller-desktop/issues/new?assignees=&labels=&template=bug_report.md&title=)
+[提交问题](https://github.com/ly0/air-controller-desktop/issues/new?assignees=&labels=&template=bug_report.md&title=)
 
 
 # 功能建议
 如果你期望应用提供一些你想要的功能，也可以使用上述连接，通过提交issue的方式给我反馈。
 
-[提交功能建议](https://github.com/air-controller/air-controller-desktop/issues/new?assignees=&labels=&template=feature_request.md&title=)
+[提交功能建议](https://github.com/ly0/air-controller-desktop/issues/new?assignees=&labels=&template=feature_request.md&title=)
 
 # 支持
 如果你喜欢这个项目，可通过以下几种方式支持我，无论是任何形式的支持，都不胜感激！

@@ -1,41 +1,31 @@
+# Version Notes
+air-controller solves the pain point of browser-based transfer from Android to macOS. However, since the original project author seems to have stopped updating it, and I urgently needed this functionality, I made a series of modifications, resulting in this version (0.5.0) along with the corresponding air-controller-mobile.
+
+[Mobile App](https://github.com/ly0/air-controller-mobile/)
+
 # FAQ
-1) The mobile app is opened, but it still can't be searched in computer.
+1) The mobile app is running, but the desktop app can’t find it
 
-Follow the steps to find the cause of the problem:
-
-* Make sure your mobile and computer connected to the same network.
-* Try to restart your mobile app.
-* Try to restart your desktop app if it's still not being searched.
-
-2) Stuck when copying files to computer.
-
-As copying multiple files needs compress to zip file first, it will take a long time if the files are too much,
-the desktop app will always be showing "compressing".
-
-So if you need to copy multiple files, instead use [FileTransfer](https://www.android.com/filetransfer/) to do this job, please.
+* Check if your router has restrictions on broadcasting.
 
 # Feedback
-If you got any questions when using, please feedback to us by clicking the link below:
+If you encounter any problems during use, please click the link below to submit feedback:
 
-[Click here](https://github.com/air-controller/air-controller-desktop/issues)
+[Click here](https://github.com/ly0/air-controller-desktop/issues)  
+[Original Project Issues](https://github.com/air-controller/air-controller-desktop/issues)
 
-# Support Developers
-This is an open source software, and you can free to use it.
+After opening the link, click **New issue** and describe your problem in detail.
 
-Please click the star button to support us if you want to support us.
+# Support the Author
+This is open-source software, and it will always remain free. If you’d like to support me, please click the link below, open the webpage, and click the *star* button in the upper right corner.
 
-[https://github.com/air-controller/air-controller-desktop](https://github.com/air-controller/air-controller-desktop)
+[https://github.com/ly0/air-controller-desktop](https://github.com/ly0/air-controller-desktop)
 
-BTW：you need to sign up first if you still haven't a github account.
+[Original Project](https://github.com/air-controller/air-controller-desktop)
 
-# Check For Updates
-Click the about button, you can see the current app version.
+# Changelog
+You can click the link below to see the latest version updates:
 
-If you want to update to the latest version, click the link below to find the latest version, download and install it.
+[Click here](https://github.com/ly0/air-controller-desktop/releases)  
 
-[Click Here](https://github.com/air-controller/air-controller-desktop/releases)
-
-# Update log
-You can click the link below to see all update logs:
-
-[Click here](https://github.com/air-controller/air-controller-desktop/releases)
+[Original Project](https://github.com/air-controller/air-controller-desktop/releases)

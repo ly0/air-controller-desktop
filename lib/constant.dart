@@ -57,7 +57,7 @@ class Constant {
 
   static const bool ENABLE_HEARTBEAT_LOG = false;
 
-  static const bool ENABLE_UDP_DISCOVER_LOG = false;
+  static const bool ENABLE_UDP_DISCOVER_LOG = true;
 
   static const bool ENABLE_BLOC_LOG = false;
 

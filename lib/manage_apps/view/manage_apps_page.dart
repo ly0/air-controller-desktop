@@ -927,6 +927,7 @@ class _ManageAppsPageState extends State<ManageAppsPage> {
                         }),
                         Container(
                           child: StreamBuilder(
+                            stream: Stream.value(null),
                             builder: ((context, snapshot) {
                               return UnifiedTextField(
                                 style: TextStyle(

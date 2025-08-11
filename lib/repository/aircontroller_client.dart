@@ -51,6 +51,38 @@ class AirControllerClient {
     dio.options.baseUrl = domain;
     dio.options.connectTimeout = 0;
     dio.options.receiveTimeout = 0;
+    
+    // 添加请求拦截器用于调试
+    dio.interceptors.add(DioCore.InterceptorsWrapper(
+      onRequest: (options, handler) {
+        print("[HTTP调试] ========================================");
+        print("[HTTP调试] 发送请求:");
+        print("[HTTP调试]   URL: ${options.uri}");
+        print("[HTTP调试]   方法: ${options.method}");
+        print("[HTTP调试]   Headers: ${options.headers}");
+        print("[HTTP调试]   Data: ${options.data}");
+        print("[HTTP调试]   QueryParameters: ${options.queryParameters}");
+        handler.next(options);
+      },
+      onResponse: (response, handler) {
+        print("[HTTP调试] 收到响应:");
+        print("[HTTP调试]   状态码: ${response.statusCode}");
+        print("[HTTP调试]   消息: ${response.statusMessage}");
+        print("[HTTP调试]   Headers: ${response.headers}");
+        handler.next(response);
+      },
+      onError: (DioCore.DioError e, handler) {
+        print("[HTTP调试] ❌ 请求失败:");
+        print("[HTTP调试]   错误类型: ${e.type}");
+        print("[HTTP调试]   消息: ${e.message}");
+        print("[HTTP调试]   响应状态码: ${e.response?.statusCode}");
+        print("[HTTP调试]   响应消息: ${e.response?.statusMessage}");
+        print("[HTTP调试]   响应数据: ${e.response?.data}");
+        print("[HTTP调试]   请求URL: ${e.requestOptions.uri}");
+        print("[HTTP调试] ========================================");
+        handler.next(e);
+      },
+    ));
   }
 
   Future<List<ImageItem>> getAllImages() async {
@@ -1477,49 +1509,87 @@ class AirControllerClient {
       Function(String fileName, int current, int total)? onProgress,
       Function(String error)? onError,
       String? fileName = null}) async {
-    String name = "";
-
-    if (fileName == null) {
-      if (images.length <= 1) {
-        int index = images.single.path.lastIndexOf("/");
-
-        if (index != -1) {
-          name = images.single.path.substring(index + 1);
-        }
-      } else {
-        final df = DateFormat("yyyyMd_HHmmss");
-
-        String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
-            DateTime.now().millisecondsSinceEpoch));
-
-        name = "images_${formatTime}.zip";
-      }
-    } else {
-      name = fileName;
-    }
-
-    var options = DownloaderUtils(
-        progress: ProgressImplementation(),
-        file: File("$dir/$name"),
-        onDone: () {
-          onDone?.call(name);
-        },
-        progressCallback: (current, total) {
-          onProgress?.call(name, current, total);
-        });
-
-    final ids = images.map((image) => image.id).toList();
-    String idsStr = Uri.encodeComponent(jsonEncode(ids));
-
-    String api = "${_domain}/image/downloadImages?ids=$idsStr";
-
+    
+    print("[下载调试] ========================================");
+    print("[下载调试] 开始下载图片");
+    print("[下载调试] 图片数量: ${images.length}");
+    print("[下载调试] 保存目录: $dir");
+    print("[下载调试] ========================================");
+    
     try {
-      if (null == _downloaderCore) {
-        _downloaderCore = await Flowder.download(api, options);
-      } else {
-        _downloaderCore?.download(api, options);
+      // 确保目标目录存在
+      final targetDir = Directory(dir);
+      if (!targetDir.existsSync()) {
+        targetDir.createSync(recursive: true);
       }
+      
+      int totalFiles = images.length;
+      int downloadedFiles = 0;
+      List<String> downloadedFileNames = [];
+      
+      // 并发下载所有图片
+      final futures = <Future>[];
+      for (int i = 0; i < images.length; i++) {
+        final image = images[i];
+        String encodedPath = Uri.encodeComponent(image.path);
+        String api = "${_domain}/stream/file?path=$encodedPath";
+        
+        // 获取文件名
+        int index = image.path.lastIndexOf("/");
+        String imageName = index != -1 
+            ? image.path.substring(index + 1)
+            : "image_${i}_${DateTime.now().millisecondsSinceEpoch}";
+        
+        // 如果提供了文件名且只有一个文件，使用提供的文件名
+        if (fileName != null && images.length == 1) {
+          imageName = fileName;
+        }
+        
+        print("[下载调试] 下载图片 ${i + 1}/${images.length}: $imageName");
+        
+        futures.add(
+          dio.download(
+            api,
+            "$dir/$imageName",
+            options: DioCore.Options(
+              headers: _commonHeaders(),
+              receiveTimeout: 0,
+            ),
+            onReceiveProgress: (received, total) {
+              // 更新进度
+              if (total > 0) {
+                onProgress?.call(imageName, received, total);
+              }
+            },
+          ).then((_) {
+            downloadedFiles++;
+            downloadedFileNames.add(imageName);
+            print("[下载调试] 图片 $imageName 下载完成 ($downloadedFiles/$totalFiles)");
+          }).catchError((e) {
+            print("[下载调试] 下载图片 $imageName 失败: $e");
+            throw e;
+          })
+        );
+      }
+      
+      // 等待所有图片下载完成
+      await Future.wait(futures);
+      
+      print("[下载调试] 所有图片下载完成！共 $downloadedFiles 个文件");
+      
+      // 只在所有文件都下载完成后调用一次 onDone
+      // 如果是单个文件，传递文件名；如果是多个文件，传递一个汇总信息
+      if (onDone != null) {
+        if (downloadedFileNames.length == 1) {
+          onDone(downloadedFileNames.first);
+        } else if (downloadedFileNames.isNotEmpty) {
+          onDone("${downloadedFileNames.length} files");
+        }
+      }
+      
     } catch (e) {
+      print("[下载调试] ❌ 批量下载失败！");
+      print("[下载调试] 错误信息: $e");
       onError?.call(e.toString());
     }
   }
@@ -1531,49 +1601,94 @@ class AirControllerClient {
       Function(String fileName, int current, int total)? onProgress,
       Function(String error)? onError,
       String? fileName = null}) async {
-    String name = "";
-
-    if (fileName == null) {
-      if (albums.length <= 1) {
-        int index = albums.single.path.lastIndexOf("/");
-
-        if (index != -1) {
-          name = albums.single.path.substring(index + 1);
-        }
-      } else {
-        final df = DateFormat("yyyyMd_HHmmss");
-
-        String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
-            DateTime.now().millisecondsSinceEpoch));
-
-        name = "albums_${formatTime}.zip";
-      }
-    } else {
-      name = fileName;
-    }
-
-    var options = DownloaderUtils(
-        progress: ProgressImplementation(),
-        file: File("$dir/$name"),
-        onDone: () {
-          onDone?.call(name);
-        },
-        progressCallback: (current, total) {
-          onProgress?.call(name, current, total);
-        });
-
-    final ids = albums.map((image) => image.id).toList();
-    String idsStr = Uri.encodeComponent(jsonEncode(ids));
-
-    String api = "${_domain}/image/downloadAlbums?ids=$idsStr";
-
+    
+    print("[下载调试] ========================================");
+    print("[下载调试] 开始下载相册");
+    print("[下载调试] 相册数量: ${albums.length}");
+    print("[下载调试] 保存目录: $dir");
+    print("[下载调试] ========================================");
+    
     try {
-      if (null == _downloaderCore) {
-        _downloaderCore = await Flowder.download(api, options);
-      } else {
-        _downloaderCore?.download(api, options);
+      // 确保目标目录存在
+      final targetDir = Directory(dir);
+      if (!targetDir.existsSync()) {
+        targetDir.createSync(recursive: true);
       }
+      
+      int totalFiles = 0;
+      int downloadedFiles = 0;
+      List<String> downloadedFileNames = [];
+      
+      // 遍历每个相册
+      for (final album in albums) {
+        print("[下载调试] 获取相册 '${album.name}' 中的图片...");
+        
+        // 获取相册中的所有图片
+        final images = await getImagesInAlbum(album);
+        print("[下载调试] 相册 '${album.name}' 包含 ${images.length} 张图片");
+        
+        if (images.isEmpty) continue;
+        
+        totalFiles += images.length;
+        
+        // 创建相册目录
+        final albumDir = Directory("$dir/${album.name}");
+        if (!albumDir.existsSync()) {
+          albumDir.createSync(recursive: true);
+        }
+        
+        // 并发下载相册中的所有图片
+        final futures = <Future>[];
+        for (int i = 0; i < images.length; i++) {
+          final image = images[i];
+          String encodedPath = Uri.encodeComponent(image.path);
+          String api = "${_domain}/stream/file?path=$encodedPath";
+          
+          // 获取文件名
+          int index = image.path.lastIndexOf("/");
+          String imageName = index != -1
+              ? image.path.substring(index + 1)
+              : "image_${i}_${DateTime.now().millisecondsSinceEpoch}";
+          
+          futures.add(
+            dio.download(
+              api,
+              "${albumDir.path}/$imageName",
+              options: DioCore.Options(
+                headers: _commonHeaders(),
+                receiveTimeout: 0,
+              ),
+              onReceiveProgress: (received, total) {
+                if (total > 0) {
+                  onProgress?.call(imageName, received, total);
+                }
+              },
+            ).then((_) {
+              downloadedFiles++;
+              downloadedFileNames.add(imageName);
+              print("[下载调试] 图片 $imageName 下载完成 ($downloadedFiles/$totalFiles)");
+            }).catchError((e) {
+              print("[下载调试] 下载图片 $imageName 失败: $e");
+              throw e;
+            })
+          );
+        }
+        
+        // 等待当前相册的所有图片下载完成
+        await Future.wait(futures);
+        print("[下载调试] 相册 '${album.name}' 下载完成");
+      }
+      
+      print("[下载调试] 所有相册下载完成！共 $downloadedFiles 个文件");
+      
+      // 只在所有文件都下载完成后调用一次 onDone
+      if (onDone != null && downloadedFileNames.isNotEmpty) {
+        onDone("${downloadedFileNames.length} files");
+      }
+      
     } catch (e) {
+      print("[下载调试] ❌ 相册下载失败！");
+      print("[下载调试] 错误信息: $e");
       onError?.call(e.toString());
     }
   }
@@ -1585,49 +1700,85 @@ class AirControllerClient {
       Function(String fileName, int current, int total)? onProgress,
       Function(String error)? onError,
       String? fileName = null}) async {
-    String name = "";
-
-    if (fileName == null) {
-      if (audios.length <= 1) {
-        int index = audios.single.path.lastIndexOf("/");
-
-        if (index != -1) {
-          name = audios.single.path.substring(index + 1);
-        }
-      } else {
-        final df = DateFormat("yyyyMd_HHmmss");
-
-        String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
-            DateTime.now().millisecondsSinceEpoch));
-
-        name = "audios_${formatTime}.zip";
-      }
-    } else {
-      name = fileName;
-    }
-
-    var options = DownloaderUtils(
-        progress: ProgressImplementation(),
-        file: File("$dir/$name"),
-        onDone: () {
-          onDone?.call(name);
-        },
-        progressCallback: (current, total) {
-          onProgress?.call(name, current, total);
-        });
-
-    final ids = audios.map((image) => image.id).toList();
-    String idsStr = Uri.encodeComponent(jsonEncode(ids));
-
-    String api = "${_domain}/audio/download?ids=$idsStr";
-
+    
+    print("[下载调试] ========================================");
+    print("[下载调试] 开始下载音频");
+    print("[下载调试] 音频数量: ${audios.length}");
+    print("[下载调试] 保存目录: $dir");
+    print("[下载调试] ========================================");
+    
     try {
-      if (null == _downloaderCore) {
-        _downloaderCore = await Flowder.download(api, options);
-      } else {
-        _downloaderCore?.download(api, options);
+      // 确保目标目录存在
+      final targetDir = Directory(dir);
+      if (!targetDir.existsSync()) {
+        targetDir.createSync(recursive: true);
       }
+      
+      int totalFiles = audios.length;
+      int downloadedFiles = 0;
+      List<String> downloadedFileNames = [];
+      
+      // 并发下载所有音频
+      final futures = <Future>[];
+      for (int i = 0; i < audios.length; i++) {
+        final audio = audios[i];
+        String encodedPath = Uri.encodeComponent(audio.path);
+        String api = "${_domain}/stream/file?path=$encodedPath";
+        
+        // 获取文件名
+        int index = audio.path.lastIndexOf("/");
+        String audioName = index != -1
+            ? audio.path.substring(index + 1)
+            : "audio_${i}_${DateTime.now().millisecondsSinceEpoch}";
+        
+        // 如果提供了文件名且只有一个文件，使用提供的文件名
+        if (fileName != null && audios.length == 1) {
+          audioName = fileName;
+        }
+        
+        print("[下载调试] 下载音频 ${i + 1}/${audios.length}: $audioName");
+        
+        futures.add(
+          dio.download(
+            api,
+            "$dir/$audioName",
+            options: DioCore.Options(
+              headers: _commonHeaders(),
+              receiveTimeout: 0,
+            ),
+            onReceiveProgress: (received, total) {
+              if (total > 0) {
+                onProgress?.call(audioName, received, total);
+              }
+            },
+          ).then((_) {
+            downloadedFiles++;
+            downloadedFileNames.add(audioName);
+            print("[下载调试] 音频 $audioName 下载完成 ($downloadedFiles/$totalFiles)");
+          }).catchError((e) {
+            print("[下载调试] 下载音频 $audioName 失败: $e");
+            throw e;
+          })
+        );
+      }
+      
+      // 等待所有音频下载完成
+      await Future.wait(futures);
+      
+      print("[下载调试] 所有音频下载完成！共 $downloadedFiles 个文件");
+      
+      // 只在所有文件都下载完成后调用一次 onDone
+      if (onDone != null) {
+        if (downloadedFileNames.length == 1) {
+          onDone(downloadedFileNames.first);
+        } else if (downloadedFileNames.isNotEmpty) {
+          onDone("${downloadedFileNames.length} files");
+        }
+      }
+      
     } catch (e) {
+      print("[下载调试] ❌ 音频下载失败！");
+      print("[下载调试] 错误信息: $e");
       onError?.call(e.toString());
     }
   }
@@ -1639,49 +1790,85 @@ class AirControllerClient {
       Function(String fileName, int current, int total)? onProgress,
       Function(String error)? onError,
       String? fileName = null}) async {
-    String name = "";
-
-    if (fileName == null) {
-      if (videos.length <= 1) {
-        int index = videos.single.path.lastIndexOf("/");
-
-        if (index != -1) {
-          name = videos.single.path.substring(index + 1);
-        }
-      } else {
-        final df = DateFormat("yyyyMd_HHmmss");
-
-        String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
-            DateTime.now().millisecondsSinceEpoch));
-
-        name = "videos_${formatTime}.zip";
-      }
-    } else {
-      name = fileName;
-    }
-
-    var options = DownloaderUtils(
-        progress: ProgressImplementation(),
-        file: File("$dir/$name"),
-        onDone: () {
-          onDone?.call(name);
-        },
-        progressCallback: (current, total) {
-          onProgress?.call(name, current, total);
-        });
-
-    final ids = videos.map((image) => image.id).toList();
-    String idsStr = Uri.encodeComponent(jsonEncode(ids));
-
-    String api = "${_domain}/video/downloadVideos?ids=$idsStr";
-
+    
+    print("[下载调试] ========================================");
+    print("[下载调试] 开始下载视频");
+    print("[下载调试] 视频数量: ${videos.length}");
+    print("[下载调试] 保存目录: $dir");
+    print("[下载调试] ========================================");
+    
     try {
-      if (null == _downloaderCore) {
-        _downloaderCore = await Flowder.download(api, options);
-      } else {
-        _downloaderCore?.download(api, options);
+      // 确保目标目录存在
+      final targetDir = Directory(dir);
+      if (!targetDir.existsSync()) {
+        targetDir.createSync(recursive: true);
       }
+      
+      int totalFiles = videos.length;
+      int downloadedFiles = 0;
+      List<String> downloadedFileNames = [];
+      
+      // 并发下载所有视频
+      final futures = <Future>[];
+      for (int i = 0; i < videos.length; i++) {
+        final video = videos[i];
+        String encodedPath = Uri.encodeComponent(video.path);
+        String api = "${_domain}/stream/file?path=$encodedPath";
+        
+        // 获取文件名
+        int index = video.path.lastIndexOf("/");
+        String videoName = index != -1
+            ? video.path.substring(index + 1)
+            : "video_${i}_${DateTime.now().millisecondsSinceEpoch}";
+        
+        // 如果提供了文件名且只有一个文件，使用提供的文件名
+        if (fileName != null && videos.length == 1) {
+          videoName = fileName;
+        }
+        
+        print("[下载调试] 下载视频 ${i + 1}/${videos.length}: $videoName");
+        
+        futures.add(
+          dio.download(
+            api,
+            "$dir/$videoName",
+            options: DioCore.Options(
+              headers: _commonHeaders(),
+              receiveTimeout: 0,
+            ),
+            onReceiveProgress: (received, total) {
+              if (total > 0) {
+                onProgress?.call(videoName, received, total);
+              }
+            },
+          ).then((_) {
+            downloadedFiles++;
+            downloadedFileNames.add(videoName);
+            print("[下载调试] 视频 $videoName 下载完成 ($downloadedFiles/$totalFiles)");
+          }).catchError((e) {
+            print("[下载调试] 下载视频 $videoName 失败: $e");
+            throw e;
+          })
+        );
+      }
+      
+      // 等待所有视频下载完成
+      await Future.wait(futures);
+      
+      print("[下载调试] 所有视频下载完成！共 $downloadedFiles 个文件");
+      
+      // 只在所有文件都下载完成后调用一次 onDone
+      if (onDone != null) {
+        if (downloadedFileNames.length == 1) {
+          onDone(downloadedFileNames.first);
+        } else if (downloadedFileNames.isNotEmpty) {
+          onDone("${downloadedFileNames.length} files");
+        }
+      }
+      
     } catch (e) {
+      print("[下载调试] ❌ 视频下载失败！");
+      print("[下载调试] 错误信息: $e");
       onError?.call(e.toString());
     }
   }
@@ -1693,49 +1880,94 @@ class AirControllerClient {
       Function(String fileName, int current, int total)? onProgress,
       Function(String error)? onError,
       String? fileName = null}) async {
-    String name = "";
-
-    if (fileName == null) {
-      if (videoFolders.length <= 1) {
-        int index = videoFolders.single.path.lastIndexOf("/");
-
-        if (index != -1) {
-          name = videoFolders.single.path.substring(index + 1);
-        }
-      } else {
-        final df = DateFormat("yyyyMd_HHmmss");
-
-        String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
-            DateTime.now().millisecondsSinceEpoch));
-
-        name = "videoFolders_${formatTime}.zip";
-      }
-    } else {
-      name = fileName;
-    }
-
-    var options = DownloaderUtils(
-        progress: ProgressImplementation(),
-        file: File("$dir/$name"),
-        onDone: () {
-          onDone?.call(name);
-        },
-        progressCallback: (current, total) {
-          onProgress?.call(name, current, total);
-        });
-
-    final ids = videoFolders.map((image) => image.id).toList();
-    String idsStr = Uri.encodeComponent(jsonEncode(ids));
-
-    String api = "${_domain}/video/downloadVideoFolders?ids=$idsStr";
-
+    
+    print("[下载调试] ========================================");
+    print("[下载调试] 开始下载视频文件夹");
+    print("[下载调试] 文件夹数量: ${videoFolders.length}");
+    print("[下载调试] 保存目录: $dir");
+    print("[下载调试] ========================================");
+    
     try {
-      if (null == _downloaderCore) {
-        _downloaderCore = await Flowder.download(api, options);
-      } else {
-        _downloaderCore?.download(api, options);
+      // 确保目标目录存在
+      final targetDir = Directory(dir);
+      if (!targetDir.existsSync()) {
+        targetDir.createSync(recursive: true);
       }
+      
+      int totalFiles = 0;
+      int downloadedFiles = 0;
+      List<String> downloadedFileNames = [];
+      
+      // 遍历每个视频文件夹
+      for (final videoFolder in videoFolders) {
+        print("[下载调试] 获取文件夹 '${videoFolder.name}' 中的视频...");
+        
+        // 获取文件夹中的所有视频
+        final videos = await getVideosInFolder(videoFolder.id);
+        print("[下载调试] 文件夹 '${videoFolder.name}' 包含 ${videos.length} 个视频");
+        
+        if (videos.isEmpty) continue;
+        
+        totalFiles += videos.length;
+        
+        // 创建视频文件夹目录
+        final folderDir = Directory("$dir/${videoFolder.name}");
+        if (!folderDir.existsSync()) {
+          folderDir.createSync(recursive: true);
+        }
+        
+        // 并发下载文件夹中的所有视频
+        final futures = <Future>[];
+        for (int i = 0; i < videos.length; i++) {
+          final video = videos[i];
+          String encodedPath = Uri.encodeComponent(video.path);
+          String api = "${_domain}/stream/file?path=$encodedPath";
+          
+          // 获取文件名
+          int index = video.path.lastIndexOf("/");
+          String videoName = index != -1
+              ? video.path.substring(index + 1)
+              : "video_${i}_${DateTime.now().millisecondsSinceEpoch}";
+          
+          futures.add(
+            dio.download(
+              api,
+              "${folderDir.path}/$videoName",
+              options: DioCore.Options(
+                headers: _commonHeaders(),
+                receiveTimeout: 0,
+              ),
+              onReceiveProgress: (received, total) {
+                if (total > 0) {
+                  onProgress?.call(videoName, received, total);
+                }
+              },
+            ).then((_) {
+              downloadedFiles++;
+              downloadedFileNames.add(videoName);
+              print("[下载调试] 视频 $videoName 下载完成 ($downloadedFiles/$totalFiles)");
+            }).catchError((e) {
+              print("[下载调试] 下载视频 $videoName 失败: $e");
+              throw e;
+            })
+          );
+        }
+        
+        // 等待当前文件夹的所有视频下载完成
+        await Future.wait(futures);
+        print("[下载调试] 文件夹 '${videoFolder.name}' 下载完成");
+      }
+      
+      print("[下载调试] 所有视频文件夹下载完成！共 $downloadedFiles 个文件");
+      
+      // 只在所有文件都下载完成后调用一次 onDone
+      if (onDone != null && downloadedFileNames.isNotEmpty) {
+        onDone("${downloadedFileNames.length} files");
+      }
+      
     } catch (e) {
+      print("[下载调试] ❌ 视频文件夹下载失败！");
+      print("[下载调试] 错误信息: $e");
       onError?.call(e.toString());
     }
   }

@@ -1,32 +1,31 @@
+# 版本说明
+air-controller 解决了 android 端到 macos 端浏览式传输的痛点，但是由于原项目作者似乎已经不再更新，我又迫切有这个需求，于是咔咔一顿改有了这个版本（0.5.0) 和对应的 air-controller-mobile.
+
+[手机端](https://github.com/ly0/air-controller-mobile/)
+
 # 常见问题
 1）手机应用已开启，电脑端却搜索不到
 
-请按照以下方法确定问题所在：
-
-* 确保手机与电脑端应用连接至同一网络
-* 尝试重启手机端应用
-* 如果还是搜索不到，可尝试重启电脑端应用
-
-2）拷贝文件到电脑，一直卡在压缩中
-
-由于拷贝多个文件或文件夹会先压缩成zip文件再开始拷贝，如果文件过多则可能造成压缩时间过长，导致一直显示在“压缩中”。因此，如果拷贝多个文件的话，建议连接数据线，使[FileTransfer](https://www.android.com/filetransfer/)进行处理。
+* 检查路由器是不是限制了广播
 
 # 问题反馈
 如果你在使用过程中，遇到了任何问题，请点击下方连接进行反馈：
 
-[点击前往](https://github.com/air-controller/air-controller-desktop/issues)
+[点击前往](https://github.com/ly0/air-controller-desktop/issues)
+[原始项目 Issue](https://github.com/air-controller/air-controller-desktop/issues)
 
 打开后，点击**New issue**详细描述你的问题即可。
 
 # 支持作者
 这是一个开源软件，并且承诺永久免费，如果你想支持我，请点击以下链接打开网页，并点击右上角*star*支持我。
 
-[https://github.com/air-controller/air-controller-desktop](https://github.com/air-controller/air-controller-desktop)
+[https://github.com/ly0/air-controller-desktop](https://github.com/ly0/air-controller-desktop)
 
-BTW：如果你还没有一个Github账号，点击star需要先完成注册。
+[原始项目](https://github.com/air-controller/air-controller-desktop)
 
 # 更新日志
 你可以点击下方链接查看最新版本更新记录：
 
-[点击前往](https://github.com/air-controller/air-controller-desktop/releases)
+[点击前往](https://github.com/ly0/air-controller-desktop/releases)
 
+[原始项目](https://github.com/air-controller/air-controller-desktop/releases)
