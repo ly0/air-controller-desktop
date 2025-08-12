@@ -9,7 +9,7 @@ class EnterState extends Equatable {
   final NetworkType networkType;
 
   const EnterState({
-    this.isNetworkConnected = true,
+    this.isNetworkConnected = false,
     this.networkName = null,
     this.devices = const [],
     this.networkType = NetworkType.wifi

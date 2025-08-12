@@ -33,7 +33,7 @@ dependencies:
   shelf: ^1.2.0
   shelf_web_socket: ^1.0.1
   device_info_plus: ^10.1.2
-  connectivity_plus: ^2.0.2
+  connectivity_plus: ^5.0.2
   network_info_plus: ^2.0.2
   fluttertoast: ^8.0.8
   http: ^1.0.0

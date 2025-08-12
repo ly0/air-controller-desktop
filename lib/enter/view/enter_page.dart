@@ -95,7 +95,7 @@ class _EnterState extends State<EnterPage>
       } else {
         context
             .read<EnterBloc>()
-            .add(EnterNetworkChanged(false, null, networkType));
+            .add(EnterNetworkChanged(false, null, NetworkType.wifi));
       }
     });
 
@@ -121,7 +121,7 @@ class _EnterState extends State<EnterPage>
       } else {
         context
             .read<EnterBloc>()
-            .add(EnterNetworkChanged(false, null, networkType));
+            .add(EnterNetworkChanged(false, null, NetworkType.wifi));
       }
     }).catchError((error) {
       log("Initial network check error: $error");
@@ -160,8 +160,12 @@ class _EnterState extends State<EnterPage>
   }
 
   bool _isNetworkConnected(ConnectivityResult result) {
+    // Check for wifi, ethernet, vpn, or other (which might include valid connections)
+    // VPN is considered as a valid network connection
     return result == ConnectivityResult.wifi ||
-        result == ConnectivityResult.ethernet;
+        result == ConnectivityResult.ethernet ||
+        result == ConnectivityResult.vpn ||
+        result == ConnectivityResult.other;
   }
 
   void _startSearchDevices() {
