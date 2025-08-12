@@ -18,7 +18,7 @@ class UnifiedDeleteButton extends StatelessWidget {
   static const _DEFAULT_PADDING = const EdgeInsets.fromLTRB(8, 4.5, 8, 4.5);
 
   UnifiedDeleteButton({
-    this.isEnable = true,
+    this.isEnable = false, // Always disabled to prevent accidental deletion
     this.iconSize = _DEFAULT_ICON_SIZE,
     this.width = _DEFAULT_WIDTH,
     this.height = _DEFAULT_HEIGHT,
@@ -31,9 +31,11 @@ class UnifiedDeleteButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StatefulBuilder(builder: (context, setState) {
+      // Force disable to prevent accidental deletion
+      final bool actuallyEnabled = false; // Always disabled
       double opacity = _isDeleteBtnTapDown ? 0.8 : 1.0;
 
-      if (!isEnable) {
+      if (!actuallyEnabled) {
         opacity = 0.6;
       }
 
@@ -57,33 +59,33 @@ class UnifiedDeleteButton extends StatelessWidget {
               )
           ),
           onTap: () {
-            if (isEnable) {
+            if (actuallyEnabled) {
               onTap?.call();
             }
           },
           onTapDown: (details) {
-            if (isEnable) {
+            if (actuallyEnabled) {
               setState(() {
                 _isDeleteBtnTapDown = true;
               });
             }
           },
           onTapCancel: () {
-            if (isEnable) {
+            if (actuallyEnabled) {
               setState(() {
                 _isDeleteBtnTapDown = false;
               });
             }
           },
           onTapUp: (details) {
-            if (isEnable) {
+            if (actuallyEnabled) {
               setState(() {
                 _isDeleteBtnTapDown = false;
               });
             }
           },
         ),
-        message: isEnable ? contentDescription : "",
+        message: actuallyEnabled ? contentDescription : "",
       );
     });
   }

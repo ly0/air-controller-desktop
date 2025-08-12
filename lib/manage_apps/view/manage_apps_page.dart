@@ -331,22 +331,23 @@ class _ManageAppsPageState extends State<ManageAppsPage> {
           _exportApks(context);
         },
       ),
-      ContextMenuItem(
-        title: context.l10n.uninstall,
-        onTap: () {
-          ContextMenuHelper().hideContextMenu();
-
-          List<AppInfo> checkedApps;
-          if (widget.isUserApps) {
-            checkedApps =
-                context.read<ManageAppsHomeBloc>().state.checkedUserApps;
-          } else {
-            checkedApps =
-                context.read<ManageAppsHomeBloc>().state.checkedSystemApps;
-          }
-          _batchUninstall(context, checkedApps);
-        },
-      )
+      // Disabled to prevent accidental uninstallation
+      // ContextMenuItem(
+      //   title: context.l10n.uninstall,
+      //   onTap: () {
+      //     ContextMenuHelper().hideContextMenu();
+      //
+      //     List<AppInfo> checkedApps;
+      //     if (widget.isUserApps) {
+      //       checkedApps =
+      //           context.read<ManageAppsHomeBloc>().state.checkedUserApps;
+      //     } else {
+      //       checkedApps =
+      //           context.read<ManageAppsHomeBloc>().state.checkedSystemApps;
+      //     }
+      //     _batchUninstall(context, checkedApps);
+      //   },
+      // )
     ]);
   }
 
@@ -733,13 +734,14 @@ class _ManageAppsPageState extends State<ManageAppsPage> {
                         text: context.l10n.uninstall,
                         space: 6,
                         margin: EdgeInsets.only(left: 10),
-                        enable: checkedApps.isNotEmpty,
+                        enable: false, // Always disabled to prevent accidental uninstallation
                         onTap: () {
-                          List<AppInfo> apps = context
-                              .read<ManageAppsHomeBloc>()
-                              .state
-                              .checkedUserApps;
-                          _batchUninstall(context, apps);
+                          // Disabled - do nothing
+                          // List<AppInfo> apps = context
+                          //     .read<ManageAppsHomeBloc>()
+                          //     .state
+                          //     .checkedUserApps;
+                          // _batchUninstall(context, apps);
                         },
                       ),
                       UnifiedIconButtonWithText(
@@ -1254,10 +1256,11 @@ class AppInfoDataSource extends DataGridSource {
                         overflow: TextOverflow.ellipsis,
                         softWrap: false,
                         style: textStyle),
-                    onPressed: () {
-                      final app = cell.value as AppInfo;
-                      _batchUninstall(context, [app]);
-                    },
+                    onPressed: null, // Disabled to prevent accidental uninstallation
+                    // onPressed: () {
+                    //   final app = cell.value as AppInfo;
+                    //   _batchUninstall(context, [app]);
+                    // },
                   ),
                   color: Colors.transparent,
                 ),

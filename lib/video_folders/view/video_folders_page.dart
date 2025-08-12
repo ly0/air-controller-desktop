@@ -832,13 +832,14 @@ class _VideoFoldersViewState extends State<VideoFoldersView> {
           }
         },
       ),
-      ContextMenuItem(
-        title: pageContext.l10n.delete,
-        onTap: () {
-          ContextMenuHelper().hideContextMenu();
-          _tryToDeleteVideoFolders(pageContext, checkedFolders);
-        },
-      )
+      // Disabled to prevent accidental deletion
+      // ContextMenuItem(
+      //   title: pageContext.l10n.delete,
+      //   onTap: () {
+      //     ContextMenuHelper().hideContextMenu();
+      //     _tryToDeleteVideoFolders(pageContext, checkedFolders);
+      //   },
+      // )
     ]);
   }
 
@@ -921,13 +922,14 @@ class _VideoFoldersViewState extends State<VideoFoldersView> {
           }
         },
       ),
-      ContextMenuItem(
-        title: pageContext.l10n.delete,
-        onTap: () {
-          ContextMenuHelper().hideContextMenu();
-          _tryToDeleteVideos(pageContext, checkedVideos);
-        },
-      )
+      // Disabled to prevent accidental deletion
+      // ContextMenuItem(
+      //   title: pageContext.l10n.delete,
+      //   onTap: () {
+      //     ContextMenuHelper().hideContextMenu();
+      //     _tryToDeleteVideos(pageContext, checkedVideos);
+      //   },
+      // )
     ]);
   }
 

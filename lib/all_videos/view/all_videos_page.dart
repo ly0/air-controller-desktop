@@ -471,13 +471,14 @@ class _AllVideosViewState extends State<AllVideosView> {
           }
         },
       ),
-      ContextMenuItem(
-        title: pageContext.l10n.delete,
-        onTap: () {
-          ContextMenuHelper().hideContextMenu();
-          _tryToDeleteVideos(pageContext, checkedVideos);
-        },
-      )
+      // Disabled to prevent accidental deletion
+      // ContextMenuItem(
+      //   title: pageContext.l10n.delete,
+      //   onTap: () {
+      //     ContextMenuHelper().hideContextMenu();
+      //     _tryToDeleteVideos(pageContext, checkedVideos);
+      //   },
+      // )
     ]);
   }
 

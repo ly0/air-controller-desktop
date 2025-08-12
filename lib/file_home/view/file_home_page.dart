@@ -653,14 +653,15 @@ class FileHomeViewState extends State<FileHomeView>
           }
         },
       ),
-      ContextMenuItem(
-        title: pageContext.l10n.delete,
-        onTap: () {
-          ContextMenuHelper().hideContextMenu();
-
-          _tryToDeleteFiles(pageContext, checkedFiles);
-        },
-      )
+      // Disabled to prevent accidental deletion
+      // ContextMenuItem(
+      //   title: pageContext.l10n.delete,
+      //   onTap: () {
+      //     ContextMenuHelper().hideContextMenu();
+      //
+      //     _tryToDeleteFiles(pageContext, checkedFiles);
+      //   },
+      // )
     ]);
   }
 

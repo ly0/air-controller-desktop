@@ -268,10 +268,12 @@ class _MusicHomeViewState extends State<MusicHomeView> {
                           Align(
                               child:
                                   StatefulBuilder(builder: (context, setState) {
+                                // Force disable to prevent accidental deletion
+                                final bool actuallyEnabled = false; // Always disabled
                                 double opacity =
                                     _isDeleteBtnTapDown ? 0.6 : 1.0;
 
-                                if (!isDeleteEnabled) {
+                                if (!actuallyEnabled) {
                                   opacity = 0.6;
                                 }
 
@@ -301,7 +303,7 @@ class _MusicHomeViewState extends State<MusicHomeView> {
                                             EdgeInsets.fromLTRB(0, 0, 15, 0)),
                                   ),
                                   onTap: () {
-                                    if (isDeleteEnabled) {
+                                    if (actuallyEnabled) {
                                       _tryToDeleteMusics(
                                           context,
                                           context
@@ -311,21 +313,21 @@ class _MusicHomeViewState extends State<MusicHomeView> {
                                     }
                                   },
                                   onTapDown: (details) {
-                                    if (isDeleteEnabled) {
+                                    if (actuallyEnabled) {
                                       setState(() {
                                         _isDeleteBtnTapDown = true;
                                       });
                                     }
                                   },
                                   onTapCancel: () {
-                                    if (isDeleteEnabled) {
+                                    if (actuallyEnabled) {
                                       setState(() {
                                         _isDeleteBtnTapDown = false;
                                       });
                                     }
                                   },
                                   onTapUp: (details) {
-                                    if (isDeleteEnabled) {
+                                    if (actuallyEnabled) {
                                       setState(() {
                                         _isDeleteBtnTapDown = false;
                                       });
@@ -913,14 +915,15 @@ class _MusicHomeViewState extends State<MusicHomeView> {
           }
         },
       ),
-      ContextMenuItem(
-        title: pageContext.l10n.delete,
-        onTap: () {
-          ContextMenuHelper().hideContextMenu();
-
-          _tryToDeleteMusics(pageContext, checkedMusics);
-        },
-      )
+      // Disabled to prevent accidental deletion
+      // ContextMenuItem(
+      //   title: pageContext.l10n.delete,
+      //   onTap: () {
+      //     ContextMenuHelper().hideContextMenu();
+      //
+      //     _tryToDeleteMusics(pageContext, checkedMusics);
+      //   },
+      // )
     ]);
   }
 

@@ -218,13 +218,14 @@ class _ManageContactsView extends StatelessWidget {
               GetContactDetailRequested(id: contact.id, isForEditting: true));
         },
       ),
-      ContextMenuItem(
-        title: context.l10n.delete,
-        onTap: () {
-          ContextMenuHelper().hideContextMenu();
-          _tryToDeleteContacts(context);
-        },
-      )
+      // Disabled to prevent accidental deletion
+      // ContextMenuItem(
+      //   title: context.l10n.delete,
+      //   onTap: () {
+      //     ContextMenuHelper().hideContextMenu();
+      //     _tryToDeleteContacts(context);
+      //   },
+      // )
     ]);
   }
 
@@ -808,9 +809,10 @@ class _ContactActionBar extends StatelessWidget {
                 text: context.l10n.delete,
                 space: 6,
                 margin: EdgeInsets.only(left: 10),
-                enable: selectedContacts.isNotEmpty,
+                enable: false, // Always disabled to prevent accidental deletion
                 onTap: () {
-                  onDeleteClick();
+                  // Disabled - do nothing
+                  // onDeleteClick();
                 },
               ),
               UnifiedIconButtonWithText(

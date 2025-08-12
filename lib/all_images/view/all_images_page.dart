@@ -565,14 +565,15 @@ class _AllImagesViewState extends State<AllImagesView> {
           }
         },
       ),
-      ContextMenuItem(
-        title: context.l10n.delete,
-        onTap: () {
-          ContextMenuHelper().hideContextMenu();
-
-          _deleteImage(context, checkedImages);
-        },
-      )
+      // Disabled to prevent accidental deletion
+      // ContextMenuItem(
+      //   title: context.l10n.delete,
+      //   onTap: () {
+      //     ContextMenuHelper().hideContextMenu();
+      //
+      //     _deleteImage(context, checkedImages);
+      //   },
+      // )
     ]);
   }
 
